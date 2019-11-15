@@ -1,0 +1,19 @@
+// These arguments were used when this file was generated. They will be automatically applied on subsequent loads 
+// via the GUI or CLI invocations. Run CLI with '--help' for additional information on how to override these arguments.
+// @cliArgs --board "/ti/boards/CC3220S_LAUNCHXL" --product "simplelink_cc32xx_sdk@3.30.01.02"
+// @versions {"data":"2019083011","timestamp":"2019083011","tool":"1.2.952","templates":"2019083011"}
+
+var SimpleLinkWifi = scripting.addModule("/ti/drivers/net/wifi/SimpleLinkWifi");
+var Crypto = scripting.addModule("/ti/drivers/Crypto");
+var Crypto1 = Crypto.addInstance();
+var Power = scripting.addModule("/ti/drivers/Power");
+var Board = scripting.addModule("/ti/drivers/Board");
+var DriverLib = scripting.addModule("/ti/devices/DriverLib");
+var DMA = scripting.addModule("/ti/drivers/DMA");
+var SPI = scripting.addModule("/ti/drivers/SPI");
+// Name - The C/C++ identifier used in applications as the index parameter passed to Crypto runtime APIs
+Crypto1.$name = "CONFIG_Crypto_0";
+// IO Retention Shutdown - IO groups to be retained during Shutdown
+Power.ioRetentionShutdown = ["GRP_1"];
+// Name
+Power.parkPins.$name = "ti_drivers_power_PowerCC32XXPins0";
