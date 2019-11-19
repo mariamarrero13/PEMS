@@ -388,7 +388,7 @@ void *mainThread(void *arg0){
 
     lcd_command(Clear);
     lcd_string("Testing Systems:");
-    lcd_command(lcd_SetCursor|lcd_LineTwo);
+     cursor_moveto(1, 0);
     //         testing AC and relays
     sleep(1);
     lcd_string("AC OFF");
@@ -396,7 +396,7 @@ void *mainThread(void *arg0){
     sleep(5);
     lcd_string("->AC ON");
     turn_AC_ON();
-    lcd_command(lcd_SetCursor|lcd_LineThree);
+    cursor_moveto(2, 0);
     lcd_string("Relay ON");
     sleep(1);
     GPIO_write(Relay1, 0);
