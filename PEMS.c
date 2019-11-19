@@ -28,8 +28,6 @@
 void cursor_moveto(uint8_t y, uint8_t x);
 void thresholdMax(uint8_t i);
 void thresholdMin(uint8_t i);
-void relayOne();
-void relayTwo();
 
 //variables
 Timer_Handle timer;
@@ -129,18 +127,30 @@ void cursor_moveto(uint8_t y, uint8_t x){
 void update_values(){
     switch(screen){
     case 0:
-        cursor_moveto(1, 12);
+        cursor_moveto(1, 5);
         sprintf(buffer, "%03d F",Temp);
         lcd_string(buffer);
+        if(T){
+          cursor_moveto(1, 19);
+          lcd_string("*");
+        }
 
-        cursor_moveto(2, 12);
+        cursor_moveto(2, 5);
         sprintf(buffer, "%03d",Hum);
         lcd_string(buffer);
         lcd_string(" %");
+        if(H){
+          cursor_moveto(1, 19);
+          lcd_string("*");
+        }
 
-        cursor_moveto(3,12);
+        cursor_moveto(3,5);
         sprintf(buffer, "%03d PPM",CO);
         lcd_string(buffer);
+        if(C){
+          cursor_moveto(1, 19);
+          lcd_string("*");
+        }
 
         cursor_moveto(0,0);
         cursor = 4;
@@ -292,11 +302,11 @@ void execute_reading(){
     Timer_close(timer);
 
     lcd_command(Clear);
-    lcd_string("Sensing...");
-    lcd_command(lcd_SetCursor|lcd_LineTwo);
+    lcd_string("Measuring...");
+    cursor_moveto(1, 0);
     lcd_string("CO2");
     CO = readMHZ16();
-    lcd_command(lcd_SetCursor|lcd_LineThree);
+    cursor_moveto(2, 0);
     lcd_string("Temp and Humidity");
     initCapture(captHandle);
 //    do
@@ -307,13 +317,14 @@ void execute_reading(){
         Hum = finaldata[0];
 //    }
 //    while (Hum == 0);
-    lcd_command(lcd_SetCursor|lcd_LineFour);
+    cursor_moveto(3, 0);
     lcd_string("Done!");
     restartCapture();
     sleep(2);
     lcd_command(Clear);
     lcd_string("Posting to DB...");
     mainPost((int)Temp,(int)Hum, (int)CO);
+    cursor_moveto(1, 0);
     lcd_string("Done");
     sleep(2);
     update_text();
@@ -376,14 +387,14 @@ void *mainThread(void *arg0){
     timer = Timer_open(Reading_Timer, &params);
 
     lcd_command(Clear);
-    lcd_string("Testing Systems: ");
+    lcd_string("Testing Systems:");
     lcd_command(lcd_SetCursor|lcd_LineTwo);
     //         testing AC and relays
     sleep(1);
-    lcd_string("AC OFF ");
+    lcd_string("AC OFF");
     turn_AC_OFF();
     sleep(5);
-    lcd_string("-> AC ON");
+    lcd_string("->AC ON");
     turn_AC_ON();
     lcd_command(lcd_SetCursor|lcd_LineThree);
     lcd_string("Relay ON");
@@ -391,7 +402,7 @@ void *mainThread(void *arg0){
     GPIO_write(Relay1, 0);
     GPIO_write(Relay2, 0);
     sleep(1);
-    lcd_string("-> Relay OFF");
+    lcd_string("->Relay OFF");
     GPIO_write(Relay1, 1);
     GPIO_write(Relay2, 1);
     sleep(2);
@@ -413,8 +424,8 @@ void *mainThread(void *arg0){
             while(GPIO_read(UP)){}
             up_arrows();
         }
-        if(GPIO_read(DOWN)!=0){
-            while(GPIO_read(DOWN)!=0){}
+        if(GPIO_read(DOWN)){
+            while(GPIO_read(DOWN)){}
             down_arrows();
         }
     }
@@ -487,24 +498,5 @@ void thresholdMin(uint8_t i){
             minC--;
             update_values();
         }
-    }
-}
-
-//****Relay Module****//
-void relayOne(){
-    if(R1 == 0 && Temp == 1){
-        GPIO_write(Relay1, 0);
-    }
-    else{
-        GPIO_write(Relay1, 1);
-    }
-}
-
-void relayTwo(){
-    if(R2 == 0 && Hum == 1){
-        GPIO_write(Relay2, 0);
-    }
-    else{
-        GPIO_write(Relay2, 1);
     }
 }
