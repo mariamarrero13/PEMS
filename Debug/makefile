@@ -158,7 +158,7 @@ all: $(OBJS) $(CMD_SRCS) $(GEN_CMDS)
 	@$(MAKE) --no-print-directory -Onone "httpget_CC3220S_LAUNCHXL_tirtos_ccs2.out"
 
 dependents:
-	-cd C:/Users/diego/Documents/UNI/MICRO_2/Lab/WIFI/tirtos_builds_CC3220S_LAUNCHXL_release_ccs_3_30_01_02/Debug && $(MAKE) clean all
+	-cd C:/Users/diego/Documents/UNI/MICRO_2/Lab/WIFI/tirtos_builds_CC3220S_LAUNCHXL_release_ccs_3_30_01_02/Debug && $(MAKE) all
 
 # Tool invocations
 httpget_CC3220S_LAUNCHXL_tirtos_ccs2.out: $(OBJS) $(CMD_SRCS) $(GEN_CMDS) C:/Users/diego/Documents/UNI/MICRO_2/Lab/WIFI/tirtos_builds_CC3220S_LAUNCHXL_release_ccs_3_30_01_02/Debug/tirtos_builds_CC3220S_LAUNCHXL_release_ccs_3_30_01_02.lib
