@@ -98,7 +98,7 @@ do{
     captHandle = Capture_open(TEMP_CAPTURE, &captParams);
 }
    while(captHandle == NULL);
-     //while(1);
+//     while(1);
 }
 
 void restartCapture(void){
@@ -109,8 +109,8 @@ void restartCapture(void){
 void DHT_read(uint32_t *readings)
 {
     int status;
-    int low = 4000;
-    int high = 4000;
+    int low = 10000;
+    int high = 10000;
 
 
     //Starts data line as Pull Up

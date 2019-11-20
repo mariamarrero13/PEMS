@@ -44,7 +44,7 @@ uint8_t edit = 0;
 uint8_t screen = 0;
 uint8_t c_pos = 0;
 uint8_t cursor = 0;
-uint8_t s_text [5][4][20] = {{"Last Reading","Temp","Hum", "CO2"},
+uint8_t s_text [5][4][20] = {{"Read","Temp","Hum", "CO2"},
                              {" Temp Config"," Hum Config"," CO2 Config", " Exit"},
                              {"Temp Config"," Min"," Max", " Exit"},
                              {"Humi Config"," Min"," Max", " Exit"},
@@ -57,7 +57,8 @@ uint16_t minT = 65;
 uint16_t maxH = 95;
 uint16_t minH = 60;
 uint16_t maxC = 1200;
-uint16_t minC = 400;
+uint16_t minC = 900;
+uint8_t initializing = 1;
 
 //weather variables
 uint16_t Temp = 100.0;
@@ -130,27 +131,24 @@ void update_values(){
         cursor_moveto(1, 5);
         sprintf(buffer, "%03d F",Temp);
         lcd_string(buffer);
-        if(T){
-          cursor_moveto(1, 19);
-          lcd_string("*");
-        }
+        cursor_moveto(1, 19);
+        if(T) lcd_string("*");
+        else lcd_string(" ");
 
         cursor_moveto(2, 5);
         sprintf(buffer, "%03d",Hum);
         lcd_string(buffer);
         lcd_string(" %");
-        if(H){
-          cursor_moveto(1, 19);
-          lcd_string("*");
-        }
+        cursor_moveto(2, 19);
+        if(H) lcd_string("*");
+        else lcd_string(" ");
 
         cursor_moveto(3,5);
         sprintf(buffer, "%03d PPM",CO);
         lcd_string(buffer);
-        if(C){
-          cursor_moveto(1, 19);
-          lcd_string("*");
-        }
+        cursor_moveto(3, 19);
+        if(C) lcd_string("*");
+        else lcd_string(" ");
 
         cursor_moveto(0,0);
         cursor = 4;
@@ -306,29 +304,42 @@ void execute_reading(){
     cursor_moveto(1, 0);
     lcd_string("CO2");
     CO = readMHZ16();
+
     cursor_moveto(2, 0);
     lcd_string("Temp and Humidity");
     initCapture(captHandle);
-//    do
-//    {
-        sleep(2);
-        DHT_read(finaldata);
-        Temp = finaldata[2];
-        Hum = finaldata[0];
-//    }
-//    while (Hum == 0);
+    sleep(2);
+    DHT_read(finaldata);
+    Temp = finaldata[2];
+    Hum = finaldata[0];
+    restartCapture();
     cursor_moveto(3, 0);
     lcd_string("Done!");
-    restartCapture();
     sleep(2);
-    lcd_command(Clear);
-    lcd_string("Posting to DB...");
-    mainPost((int)Temp,(int)Hum, (int)CO);
-    cursor_moveto(1, 0);
-    lcd_string("Done");
-    sleep(2);
-    update_text();
-    update_values();
+
+    if(initializing){
+        lcd_command(Clear);
+        lcd_string("Warming Up Sensors");
+        cursor_moveto(1,0);
+        lcd_string("Please Wait");
+        initializing = 0;
+    }
+    else{
+        lcd_command(Clear);
+        lcd_string("Posting to DB...");
+        mainPost((int)Temp,(int)Hum, (int)CO);
+        cursor_moveto(1, 0);
+        lcd_string("Done!");
+        sleep(2);
+        update_text();
+        update_values();
+        act_on_devices();
+    }
+    timer = Timer_open(Reading_Timer, &params);
+    Timer_start(timer);
+}
+
+void act_on_devices(){
     if (Temp <= minT && T){
         turn_AC_OFF();
         T = 0;
@@ -338,11 +349,11 @@ void execute_reading(){
         T = 1;
     }
     if(Hum <=minH && H==0){
-        GPIO_write(Relay2, 0);
+        GPIO_write(Relay1, 0);
         H = 1;
     }
     if(Hum >=maxH && H){
-        GPIO_write(Relay2, 1);
+        GPIO_write(Relay1, 1);
         H = 0;
     }
     if(CO >= maxC && C==0){
@@ -353,8 +364,6 @@ void execute_reading(){
         GPIO_write(Relay2, 1);
         C = 0;
     }
-    timer = Timer_open(Reading_Timer, &params);
-    Timer_start(timer);
 }
 
 //****Timer CallBack ******//
@@ -363,6 +372,8 @@ void timer_callback(Timer_Handle myHandle){ //Timer_Handle myHandle
 }
 //****Main Module****//
 void *mainThread(void *arg0){
+    int mins;
+    int sec_txt;
     GPIO_init();
     Timer_init();
     UART_init();
@@ -386,9 +397,10 @@ void *mainThread(void *arg0){
     params.timerCallback = timer_callback;
     timer = Timer_open(Reading_Timer, &params);
 
+    lcd_command(Display_on_nc);
     lcd_command(Clear);
     lcd_string("Testing Systems:");
-     cursor_moveto(1, 0);
+    cursor_moveto(1, 0);
     //         testing AC and relays
     sleep(1);
     lcd_string("AC OFF");
@@ -407,11 +419,30 @@ void *mainThread(void *arg0){
     GPIO_write(Relay2, 1);
     sleep(2);
     Timer_start(timer);
+    execute_reading(); //to warm up sensors
+    cursor_moveto(2,0);
+    lcd_string("Seconds left:");
+    while(seconds!=60){
+        cursor_moveto(2,14);
+        sprintf(buffer, "%02d s",60-seconds);
+        lcd_string(buffer);
+    }
+    seconds = 0;
     execute_reading();
 
     while(1)
     {
-        if(seconds == 60){
+        if(screen == 0){
+        mins = seconds/60;
+        sec_txt = seconds - (60*mins);
+        cursor_moveto(0,6);
+        sprintf(buffer, "%02d m",mins);
+        lcd_string(buffer);
+        sprintf(buffer, " %02d s",sec_txt);
+        lcd_string(buffer);
+        lcd_string(" ago");
+        }
+        if(seconds == 300){
             seconds =0;
             execute_reading();
 
@@ -491,11 +522,11 @@ void thresholdMin(uint8_t i){
     }
     else if(screen == 4){
         if(i == 1 && minC != 10000 && minC<maxC-1){
-            minC++;
+            minC = minC + 5;
             update_values();
         }
         else if (i == 2 && minC !=0 && minC<maxC-1){
-            minC--;
+            minC = minC - 5;
             update_values();
         }
     }
