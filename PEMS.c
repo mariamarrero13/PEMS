@@ -331,9 +331,9 @@ void execute_reading(){
         cursor_moveto(1, 0);
         lcd_string("Done!");
         sleep(2);
+        act_on_devices();
         update_text();
         update_values();
-        act_on_devices();
     }
     timer = Timer_open(Reading_Timer, &params);
     Timer_start(timer);
@@ -442,7 +442,7 @@ void *mainThread(void *arg0){
         lcd_string(buffer);
         lcd_string(" ago");
         }
-        if(seconds == 300){
+        if(seconds == 900){
             seconds =0;
             execute_reading();
 
