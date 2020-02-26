@@ -92,11 +92,11 @@ int post(int temp, int hum,int co)
     retc = pthread_attr_setdetachstate(&pAttrs, detachState);
     if(retc != 0)
     {
-        /* pthread_attr_setdetachstate() failed */
-        while(1)
-        {
-            ;
-        }
+//        /* pthread_attr_setdetachstate() failed */
+//        while(1)
+//        {
+//            ;
+//        }
     }
 
     pthread_attr_setschedparam(&pAttrs, &priParam);
@@ -104,21 +104,21 @@ int post(int temp, int hum,int co)
     retc |= pthread_attr_setstacksize(&pAttrs, THREADSTACKSIZE);
     if(retc != 0)
     {
-        /* pthread_attr_setstacksize() failed */
-        while(1)
-        {
-            ;
-        }
+//        /* pthread_attr_setstacksize() failed */
+//        while(1)
+//        {
+//            ;
+//        }
     }
 
     retc = pthread_create(&thread, &pAttrs, mainPost,&args);
     if(retc != 0)
     {
-        /* pthread_create() failed */
-        while(1)
-        {
-            ;
-        }
+//        /* pthread_create() failed */
+//        while(1)
+//        {
+//            ;
+//        }
     }
 
     BIOS_start();

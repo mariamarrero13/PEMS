@@ -327,9 +327,16 @@ void execute_reading(){
     else{
         lcd_command(Clear);
         lcd_string("Posting to DB...");
-        mainPost((int)Temp,(int)Hum, (int)CO);
-        cursor_moveto(1, 0);
-        lcd_string("Done!");
+        int ret = mainPost((int)Temp,(int)Hum, (int)CO);
+        if(ret){
+            cursor_moveto(1, 0);
+            lcd_string("Failed to Connect!");
+            Connect();
+        }
+        else{
+            cursor_moveto(1, 0);
+            lcd_string("Done!");
+        }
         sleep(2);
         act_on_devices();
         update_text();
@@ -397,6 +404,11 @@ void *mainThread(void *arg0){
     params.timerCallback = timer_callback;
     timer = Timer_open(Reading_Timer, &params);
 
+    lcd_command(Clear);
+    lcd_string("Connecting to WiFi");
+    sleep(2);
+    WiFi_thread();
+
     lcd_command(Display_on_nc);
     lcd_command(Clear);
     lcd_string("Testing Systems:");
@@ -422,6 +434,7 @@ void *mainThread(void *arg0){
     execute_reading(); //to warm up sensors
     cursor_moveto(2,0);
     lcd_string("Seconds left:");
+    //TODO : change this
     while(seconds!=60){
         cursor_moveto(2,14);
         sprintf(buffer, "%02d s",60-seconds);
@@ -433,19 +446,19 @@ void *mainThread(void *arg0){
     while(1)
     {
         if(screen == 0){
-        mins = seconds/60;
-        sec_txt = seconds - (60*mins);
-        cursor_moveto(0,6);
-        sprintf(buffer, "%02d m",mins);
-        lcd_string(buffer);
-        sprintf(buffer, " %02d s",sec_txt);
-        lcd_string(buffer);
-        lcd_string(" ago");
+            mins = seconds/60;
+            sec_txt = seconds - (60*mins);
+            cursor_moveto(0,6);
+            sprintf(buffer, "%02d m",mins);
+            lcd_string(buffer);
+            sprintf(buffer, " %02d s",sec_txt);
+            lcd_string(buffer);
+            lcd_string(" ago");
         }
+        //TODO : change this
         if(seconds == 900){
-            seconds =0;
             execute_reading();
-
+            seconds =0;
         }
         if(GPIO_read(ENTER)){
             while(GPIO_read(ENTER)){}

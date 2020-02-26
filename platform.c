@@ -51,11 +51,11 @@ struct info args;
 #define SLNET_IF_WIFI_PRIO                    (5)
 #define SLNET_IF_WIFI_NAME                    "CC32xx"
 /* AP SSID */
-#define SSID_NAME                             "RUMNET"
+#define SSID_NAME                             "Galaxy"
 
 
 /* Security type could be SL_WLAN_SEC_TYPE_WPA_WPA2 */      
-#define SECURITY_TYPE                         SL_WLAN_SEC_TYPE_OPEN 
+#define SECURITY_TYPE                         SL_WLAN_SEC_TYPE_OPEN
 
 /* Password of the secured AP */
 #define SECURITY_KEY                          ""
@@ -74,7 +74,7 @@ extern void* httpTask(void* pvParameters);
 void printError(char *errString,
                 int code)
 {
-   printf("Error! code = %d, Description = %s\n", code,&errString);
+   printf("Error! code = %d, Description = %s\n", code, errString);
                  //  errString);
 //    while(1)
 //    {
@@ -119,7 +119,7 @@ void SimpleLinkNetAppEventHandler(SlNetAppEvent_t *pNetAppEvent)
                         SL_IPV4_BYTE(pNetAppEvent->Data.IpAcquiredV4.Gateway,2),
                         SL_IPV4_BYTE(pNetAppEvent->Data.IpAcquiredV4.Gateway,1),
                         SL_IPV4_BYTE(pNetAppEvent->Data.IpAcquiredV4.Gateway,0));
-//
+
             pthread_attr_init(&pAttrs);
             priParam.sched_priority = 1;
             status = pthread_attr_setschedparam(&pAttrs, &priParam);
@@ -128,7 +128,7 @@ void SimpleLinkNetAppEventHandler(SlNetAppEvent_t *pNetAppEvent)
             status = pthread_create(&httpThread, &pAttrs, httpTask, &args);
             if(status)
             {
-                printError("Task create failed", status);
+                printError("Http task create failed ", status);
             }
         }
         break;
@@ -350,7 +350,7 @@ void Connect(void)
 //}
 
 
-void mainPost(int Temp, int Hum, int CO)
+int mainPost(int Temp, int Hum, int CO)
 {
 
 
@@ -358,13 +358,31 @@ void mainPost(int Temp, int Hum, int CO)
   args.hum=Hum;
   args.co=CO;
 
+  int32_t             status = 0;
+  pthread_attr_t      pAttrs;
+  struct sched_param  priParam;
 
+  pthread_attr_init(&pAttrs);
+  priParam.sched_priority = 1;
+  status = pthread_attr_setschedparam(&pAttrs, &priParam);
+  status |= pthread_attr_setstacksize(&pAttrs, TASK_STACK_SIZE);
 
+  status = pthread_create(&httpThread, &pAttrs, httpTask, &args);
+  pthread_join(httpThread,NULL);
+  if(status)
+  {
+      printError("Http task create failed ", status);
+      return 1;
+  }
+  return 0;
 
+}
+
+void WiFi_thread(){
     int32_t status = 0;
     pthread_attr_t pAttrs_spawn;
     struct sched_param priParam;
-	
+
     SPI_init();
   //  Display_init();
    // display = Display_open(Display_Type_UART, NULL);
@@ -389,7 +407,7 @@ void mainPost(int Temp, int Hum, int CO)
     status = pthread_create(&spawn_thread, &pAttrs_spawn, sl_Task, NULL);
     if(status)
     {
-        printError("Task create failed", status);
+        printError(" sl_Task create failed", status);
     }
 
     /* Turn NWP on - initialize the device*/
@@ -428,3 +446,4 @@ void mainPost(int Temp, int Hum, int CO)
     }
     Connect();
 }
+

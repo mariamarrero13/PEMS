@@ -78,6 +78,8 @@
 
 
 #define builtBuff "{\"value\":420}"
+
+
 //extern Display_Handle display;
 extern sem_t ipEventSyncObj;
 
@@ -90,6 +92,8 @@ extern void printError(char *errString,
  *  ======== httpTask ========
  *  Makes a HTTP GET request
  */
+
+
 void* httpTask(struct info *pvParameters)
 {
 
@@ -178,6 +182,7 @@ void* httpTask(struct info *pvParameters)
     if(ret < 0)
     {
         printError("httpTask: connect failed", ret);
+        Connect();
     }
     // Display_printf(display, 0, 0, "{\"datum\":{\"value\":\"10\"}\n");
 
@@ -347,6 +352,5 @@ void* httpTask(struct info *pvParameters)
     }
 
     HTTPClient_destroy(httpClientHandle);
-
     return(0);
 }
